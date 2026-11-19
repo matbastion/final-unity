@@ -23,8 +23,8 @@ cycles=20000
 
 [mixer]
 nosound=false
-rate=44100
-blocksize=1024
+rate=22050
+blocksize=2048
 prebuffer=20
 
 [sblaster]
