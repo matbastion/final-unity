@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-fullscreen">
+<meta name="apple-mobile-web-app-title" content="Final Unity">
+<meta name="theme-color" content="#000000">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-180.png">
+<title>Final Unity</title>
+<style>
+  html, body { margin: 0; height: 100%; background: #000; color: #e8e6e3; overflow: hidden;
+    font: 17px/1.45 -apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif;
+    -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; touch-action: none; }
+  .screen { position: fixed; inset: 0; display: none; align-items: center; justify-content: center; }
+  .screen.on { display: flex; }
+  .panel { max-width: 520px; padding: 32px; text-align: center; }
+  h1 { font-weight: 600; font-size: 28px; letter-spacing: .02em; margin: 0 0 6px; }
+  .sub { color: #9a978f; margin: 0 0 28px; }
+  .btn { display: inline-block; background: #2b5fd9; color: #fff; border: 0; border-radius: 12px;
+    padding: 14px 26px; font: 600 17px -apple-system, sans-serif; cursor: pointer; }
+  .btn.ghost { background: transparent; color: #9a978f; padding: 10px 14px; font-weight: 500; }
+  .bar { height: 6px; background: #222; border-radius: 3px; overflow: hidden; margin: 22px 0 8px; display: none; }
+  .bar > div { height: 100%; width: 0; background: #2b5fd9; transition: width .2s; }
+  .msg { color: #9a978f; font-size: 15px; min-height: 22px; }
+  .err { color: #ff8a80; }
+  .hint { margin-top: 26px; font-size: 14px; color: #77746d; }
+  #load .dots { color: #77746d; font-size: 15px; letter-spacing: .3em; }
+  #game { background: #000; }
+  #screen { position: absolute; image-rendering: auto; }
+  #menuBtn { position: fixed; top: calc(env(safe-area-inset-top) + 8px); right: calc(env(safe-area-inset-right) + 8px);
+    width: 40px; height: 40px; border-radius: 20px; background: rgba(255,255,255,.10); border: 0; color: rgba(255,255,255,.55);
+    font-size: 20px; line-height: 40px; text-align: center; padding: 0; z-index: 5; }
+  #menu { position: fixed; top: calc(env(safe-area-inset-top) + 56px); right: calc(env(safe-area-inset-right) + 8px);
+    background: rgba(20,20,22,.94); border-radius: 14px; padding: 6px; display: none; z-index: 6; min-width: 210px; }
+  #menu.on { display: block; }
+  #menu button { display: block; width: 100%; text-align: left; background: none; border: 0; color: #e8e6e3;
+    font: 16px -apple-system, sans-serif; padding: 12px 14px; border-radius: 9px; }
+  #menu button:active { background: rgba(255,255,255,.1); }
+  #menu hr { border: 0; border-top: 1px solid rgba(255,255,255,.1); margin: 4px 8px; }
+  #rmode.on { color: #8fb3ff; }
+  #kbd { position: fixed; left: -1000px; top: 0; opacity: 0; width: 10px; height: 10px; font-size: 16px; }
+  #toast { position: fixed; left: 50%; bottom: calc(env(safe-area-inset-bottom) + 18px); transform: translateX(-50%);
+    background: rgba(20,20,22,.9); color: #e8e6e3; padding: 8px 16px; border-radius: 18px; font-size: 14px;
+    opacity: 0; transition: opacity .3s; pointer-events: none; z-index: 7; }
+</style>
+</head>
+<body>
+<div id="setup" class="screen">
+  <div class="panel">
+    <h1>Star Trek: A Final Unity</h1>
+    <p class="sub">Einmalige Einrichtung</p>
+    <p>Wähle die Datei <b>FinalUnity-Spieldaten.zip</b> aus der Dateien-App. Sie wird in die App kopiert, danach brauchst du sie nicht mehr.</p>
+    <p style="margin-top:24px"><label class="btn" for="pick">Spieldatei auswählen</label></p>
+    <input id="pick" type="file" style="display:none">
+    <div class="bar" id="bar"><div></div></div>
+    <div class="msg" id="setupMsg"></div>
+    <div class="hint" id="installHint"></div>
+  </div>
+</div>
+<div id="load" class="screen"><div class="panel"><h1>Final Unity</h1><div class="dots" id="loadMsg">wird geladen …</div></div></div>
+<div id="ended" class="screen"><div class="panel"><h1>Spiel beendet</h1><p class="sub">Deine Spielstände sind gespeichert.</p><button class="btn" id="restart">Neu starten</button></div></div>
+<div id="game" class="screen">
+  <canvas id="screen" width="640" height="480"></canvas>
+</div>
+<button id="menuBtn" style="display:none" aria-label="Menü">⋯</button>
+<div id="menu">
+  <button data-key="256">Esc</button>
+  <button data-key="257">Enter</button>
+  <button data-key="32">Leertaste</button>
+  <button id="kbdBtn">Tastatur einblenden</button>
+  <hr>
+  <button id="rmode">Nächster Tipp = Rechtsklick</button>
+  <button id="mute">Ton aus</button>
+  <hr>
+  <button id="reimport" class="">Spieldaten neu laden …</button>
+</div>
+<input id="kbd" type="text" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+<div id="toast"></div>
+<script src="emulators.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
