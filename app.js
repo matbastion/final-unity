@@ -50,6 +50,28 @@ cls
 STTNG
 `;
 
+// ---------- audio ----------
+// The emulator creates its own AudioContext. iOS only lets it start from a real user gesture
+// (touchend/click, not touchstart/pointerdown), so we track every context and resume it on each gesture.
+const audioCtxs = [];
+if (window.AudioContext) {
+  const AC = window.AudioContext;
+  window.AudioContext = class extends AC { constructor(...a) { super(...a); audioCtxs.push(this); } };
+}
+try { if (navigator.audioSession) navigator.audioSession.type = 'playback'; } catch (_) {}  // play even in silent mode
+function unlockAudio() {
+  for (const c of audioCtxs) {
+    if (c.state === 'closed' || c.state === 'running') continue;
+    c.resume().catch(() => {});
+    try {                                    // a silent one-sample buffer completes the unlock on older iOS
+      const b = c.createBuffer(1, 1, 22050), s = c.createBufferSource();
+      s.buffer = b; s.connect(c.destination); s.start(0);
+    } catch (_) {}
+  }
+}
+for (const ev of ['touchend', 'click', 'keydown', 'pointerup'])
+  document.addEventListener(ev, unlockAudio, {capture: true, passive: true});
+
 let toastTimer;
 function toast(t) { const el = $('toast'); el.textContent = t; el.style.opacity = 1; clearTimeout(toastTimer); toastTimer = setTimeout(() => el.style.opacity = 0, 1800); }
 
@@ -142,7 +164,7 @@ $('restart').addEventListener('click', () => location.reload());
 
 document.addEventListener('visibilitychange', () => {
   if (!ci) return;
-  if (document.hidden) ci.pause(); else ci.resume();
+  if (document.hidden) ci.pause(); else { ci.resume(); unlockAudio(); }
 });
 
 // ---------- touch → mouse ----------

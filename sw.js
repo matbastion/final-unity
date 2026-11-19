@@ -1,5 +1,5 @@
 // Offline cache for the app shell. Game data lives in the app's private storage, not here.
-const CACHE = 'final-unity-v1';
+const CACHE = 'final-unity-v2';
 const FILES = ['./', 'index.html', 'app.js', 'emulators.js', 'wdosbox.js', 'wdosbox.wasm', 'wlibzip.js', 'wlibzip.wasm',
   'import-worker.js', 'manifest.json', 'icon-180.png', 'icon-512.png'];
 self.addEventListener('install', (e) => e.waitUntil(caches.open(CACHE).then((c) => c.addAll(FILES)).then(() => self.skipWaiting())));
